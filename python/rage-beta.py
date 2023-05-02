@@ -61,8 +61,8 @@ class Entity:
         self.Timer = self.c.npc.getTimers()
         # 封装为字典，第一个参数为timerId，第二个为持续时间，第三个为是否循环; 外层表示是否正在进行
         self.timers['Alarm'] = [[1, 40, False], False]
-        self.timers['Duration'] = [[2, 40, False], False]
-        self.timers['Interval'] = [[3, 160, False], False]
+        self.timers['Duration'] = [[2, 60, False], False]
+        self.timers['Interval'] = [[3, 140, False], False]
         self.timers['TimeToHang'] = [[4, 100, False], False]
 
     def timer_start(self, timer_name):
