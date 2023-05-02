@@ -35,6 +35,7 @@ class Entity:
     # 封装的customnpc接口
     c = None
 
+
     def __init__(self, c):
         self.c = c
         self.c.npc.say("Initialized!")
@@ -47,32 +48,72 @@ class Entity:
         self.skill_rage(timer_id)
 
     def target(self):
-        self.Timer.start(*self.timers['Alarm'])
+        self.timer_start('Alarm')
         self.c.npc.say("Alarm!")
+
         # do something
 
     def targetLost(self):
-        self.Timer.clear()
+        self.c.npc.say("Target lost!")
+        self.timer_start('TimeToHang')
+
         # do something
 
     def timer_init(self):
         # 获取接口的Timer
         self.Timer = self.c.npc.getTimers()
-        # 封装为字典，第一个参数为timerId，第二个为持续时间，第三个为是否循环
-        self.timers['Alarm'] = [1, 48, False]
-        self.timers['Duration'] = [2, 48, False]
-        self.timers['Interval'] = [1, 192, False]
+        # 封装为字典，第一个参数为timerId，第二个为持续时间，第三个为是否循环; 外层表示是否正在进行
+        self.timers['Alarm'] = [[1, 40, False], False]
+        self.timers['Duration'] = [[2, 40, False], False]
+        self.timers['Interval'] = [[3, 160, False], False]
+        self.timers['TimeToHang'] = [[4, 100, False], False]
+
+    def timer_start(self, timer_name):
+        if not self.timers[timer_name][1]:
+            self.timers[timer_name][1] = True
+            self.Timer.start(*self.timers[timer_name][0])
+
+    def timer_finish(self, timer_name):
+        self.timers[timer_name][1] = False
+
+    def strengthen(self):
+        self.c.npc.stats.melee.setStrength(6)
+        self.c.npc.stats.melee.setDelay(4)
+
+    def recover(self):
+        self.c.npc.stats.melee.setStrength(7)
+        self.c.npc.stats.melee.setDelay(16)
 
     def skill_rage(self, timer_id):
-        if timer_id == self.timers['Alarm'][0]:
+        # Alarm ends
+        if timer_id == self.timers['Alarm'][0][0]:
+            self.timer_finish('Alarm')
             self.c.npc.say("Start Raging!")
-            self.Timer.start(*self.timers['Duration'])
-            # do something
+            self.timer_start('Duration')
+            # Strengthen
+            self.strengthen()
 
-        if timer_id == self.timers['Duration'][0]:
+        # Interval ends
+        if timer_id == self.timers['Interval'][0][0]:
+            self.timer_finish('Interval')
+            # 偷懒直接调用target(),反正效果一样（逃
+            self.target()
+
+        # Duration ends
+        if timer_id == self.timers['Duration'][0][0]:
+            self.timer_finish('Duration')
             self.c.npc.say("Stop raging")
-            self.Timer.start(*self.timers['Interval'])
-            # do something
+            if self.c.npc.isAttacking():
+                self.timer_start('Interval')
+            self.recover()
+
+        # Hang ends
+        if timer_id == self.timers['TimeToHang'][0][0]:
+            self.timer_finish('TimeToHang')
+            if not self.c.npc.isAttacking:
+                self.recover()
+                self.Timer.clear()
+
 
     # 调试函数
     # def show(self):
