@@ -35,28 +35,25 @@ class Entity:
     # 封装的customnpc接口
     c = None
 
-
     def __init__(self, c):
         self.c = c
         self.c.npc.say("Initialized!")
         self.timer_init()
 
     def interact(self):
-        self.c.npc.say("FAQ!")
+        pass
 
     def timer(self, timer_id):
         self.skill_rage(timer_id)
 
     def target(self):
         self.timer_start('Alarm')
-        self.c.npc.say("Alarm!")
+        self.c.npc.say(u"警告:即将发动技能“癫狂连击”")
 
         # do something
 
     def targetLost(self):
-        self.c.npc.say("Target lost!")
         self.timer_start('TimeToHang')
-
         # do something
 
     def timer_init(self):
@@ -79,18 +76,16 @@ class Entity:
     def strengthen(self):
         self.c.npc.stats.melee.setStrength(6)
         self.c.npc.stats.melee.setDelay(4)
-        self.c.npc.swingOffhand()
 
     def recover(self):
         self.c.npc.stats.melee.setStrength(7)
         self.c.npc.stats.melee.setDelay(16)
-        self.c.npc.swingMainhand()
 
     def skill_rage(self, timer_id):
         # Alarm ends
         if timer_id == self.timers['Alarm'][0][0]:
             self.timer_finish('Alarm')
-            self.c.npc.say("Start Raging!")
+            self.c.npc.say(u"发动技能“癫狂连击”")
             self.timer_start('Duration')
             # Strengthen
             self.strengthen()
@@ -99,12 +94,13 @@ class Entity:
         if timer_id == self.timers['Interval'][0][0]:
             self.timer_finish('Interval')
             # 偷懒直接调用target(),反正效果一样（逃
-            self.target()
+            if self.c.npc.isAttacking():
+                self.target()
 
         # Duration ends
         if timer_id == self.timers['Duration'][0][0]:
             self.timer_finish('Duration')
-            self.c.npc.say("Stop raging")
+            self.c.npc.say(u"“癫狂连击”结束")
             if self.c.npc.isAttacking():
                 self.timer_start('Interval')
             self.recover()
@@ -115,7 +111,6 @@ class Entity:
             if not self.c.npc.isAttacking:
                 self.recover()
                 self.Timer.clear()
-
 
     # 调试函数
     # def show(self):
